@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-Hant"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>English Paper Reader</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#f4f6fa;color:#18243a;margin:0}main{max-width:850px;margin:auto;padding:28px 16px}h1{font-size:clamp(24px,4vw,36px)}.card{background:white;border:1px solid #dce3ee;border-radius:14px;padding:18px;margin:14px 0;line-height:1.7}.sentence{display:flex;align-items:center;gap:15px}.sentence p{flex:1;font-size:18px}button,select{font:inherit;padding:10px;border-radius:9px}button{background:#2563eb;color:white;border:0;cursor:pointer;white-space:nowrap}select{border:1px solid #aaa}.playing{background:#eff6ff;border-color:#60a5fa}table{width:100%;border-collapse:collapse;background:white}td,th{padding:12px;text-align:left;border-bottom:1px solid #ddd}@media(max-width:540px){.sentence{flex-direction:column;align-items:stretch}}
+</style><main>
+<h1>Starlink’s Direct Satellite-to-Device Approach</h1><p>第一段 · 逐句英文朗讀與難字</p>
+<div class="card">朗讀速度 <select id="rate"><option>.75</option><option selected>1</option><option>1.25</option></select>　英文語音 <select id="voice"><option value="">系統預設</option></select> <button onclick="stop()">■ 停止</button><p id="status" aria-live="polite"></p></div>
+<section id="sentences"></section><h2>較難字彙</h2><table id="vocab"></table>
+<p>朗讀使用瀏覽器內建語音合成，音質依裝置而異。</p></main>
+<script>
+const sentences=[
+"Starlink has reshaped the satellite telecommunication sector by deploying over 7,000 satellites since its first launches in 2019.",
+"The bent-pipe architecture initially adopted enabled rapid deployment using simpler satellite designs at the cost of deploying a dense network of ground stations to ensure continuous coverage.",
+"From 2022 onward, Starlink progressively introduced laser inter-satellite links, fully adopted in its second-generation, Gen2, fleet, enabling onboard signal processing and space-based routing.",
+"This transition from a ground-dependent relay to a space-based mesh brings expanded coverage, improved resilience, and enhanced end-to-end performance."
+];
+const words=[["Reshape","重塑、改變"],["Telecommunication","電信、遠距通訊"],["Deploy","部署"],["Architecture","架構"],["At the cost of","以……為代價"],["Dense","密集的"],["Progressively","逐步地"],["Inter-satellite","衛星之間的"],["Fleet","衛星群、艦隊"],["Resilience","韌性、復原能力"],["Relay","中繼、轉發"],["End-to-end","端到端的"]];
+const area=document.querySelector('#sentences'),voiceBox=document.querySelector('#voice'),status=document.querySelector('#status');let voices=[],counter=0;
+function stop(){counter++;speechSynthesis.cancel();document.querySelectorAll('.playing').forEach(e=>e.classList.remove('playing'));status.textContent='已停止'}
+function play(i){if(!('speechSynthesis'in window)){status.textContent='瀏覽器不支援朗讀';return}stop();const id=++counter,u=new SpeechSynthesisUtterance(sentences[i]);u.lang='en-US';u.rate=Number(document.querySelector('#rate').value);const voice=voices.find(v=>v.voiceURI===voiceBox.value);if(voice)u.voice=voice;u.onstart=()=>{if(id===counter){document.querySelectorAll('.sentence')[i].classList.add('playing');status.textContent='正在朗讀第 '+(i+1)+'句'}};u.onend=()=>{if(id===counter){document.querySelectorAll('.playing').forEach(e=>e.classList.remove('playing'));status.textContent='朗讀完成'}};u.onerror=()=>{if(id===counter)status.textContent='無法播放，請更換語音'};speechSynthesis.speak(u)}
+sentences.forEach((s,i)=>{const article=document.createElement('article');article.className='card sentence';const p=document.createElement('p');p.textContent=s;const b=document.createElement('button');b.textContent='▶ 朗讀';b.onclick=()=>play(i);article.append(p,b);area.append(article)});
+const table=document.querySelector('#vocab');words.forEach(([en,zh])=>{const row=table.insertRow();row.insertCell().textContent=en;row.insertCell().textContent=zh});
+function loadVoices(){const previous=voiceBox.value;voices=speechSynthesis.getVoices().filter(v=>/^en[-_]/i.test(v.lang));voiceBox.replaceChildren(new Option('系統預設',''));voices.forEach(v=>voiceBox.add(new Option(v.name+' ('+v.lang+')',v.voiceURI)));if(voices.some(v=>v.voiceURI===previous))voiceBox.value=previous;else{const us=voices.find(v=>v.lang==='en-US');if(us)voiceBox.value=us.voiceURI}}
+if('speechSynthesis'in window){loadVoices();speechSynthesis.addEventListener?.('voiceschanged',loadVoices)}else status.textContent='瀏覽器不支援朗讀';
+</script>
